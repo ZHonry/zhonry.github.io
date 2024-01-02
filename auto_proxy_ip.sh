@@ -2,7 +2,7 @@
 
 
 function installNetTools() {
-    yum install net-tools -y
+    yum install net-tools tar make -y
 }
 
 function installFirewall() {
