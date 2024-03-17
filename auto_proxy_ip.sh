@@ -36,25 +36,26 @@ function installTinyproxy() {
     # git clone https://github.com/tinyproxy/tinyproxy.git /root/tinyproxy
     # cd /root/tinyproxy
     
-    rm -rf /opt/tinyproxy
+    rm -rf /opt/tinyproxy && mkdir /root/tc_config
     ./configure --prefix=/opt/tinyproxy/
     make
     make install
 }
 
 function initConfig() {
-    ifconfig | grep -A1 eth0 | grep inet | awk -F' ' '{print $2}' > /root/ip.txt
+    # ifconfig | grep -A1 eth0 | grep inet | awk -F' ' '{print $2}' > /root/ip.txt
+    ip addr | grep inet | awk -F' ' '{print $2}' | awk -F'/' '{print $1}' | grep -v ":" | grep -v "127.0.0.1"  > /root/ip.txt
     fip=`head -1 /root/ip.txt`
     index=1
     cat /root/ip.txt |while read ip
     do
-        echo 'Port 51333'                        >  /root/tc$index.conf
-        echo "Listen $ip"                        >> /root/tc$index.conf
-        echo "BIND $ip"                          >> /root/tc$index.conf
-        echo 'Timeout 600'                       >> /root/tc$index.conf
-        echo '# Allow ANY'                       >> /root/tc$index.conf
-        echo 'BasicAuth hangyin RvHfzHXA7z96hC'  >> /root/tc$index.conf
-        /opt/tinyproxy/bin/tinyproxy -c /root/tc$index.conf
+        echo 'Port 51333'                        >  /root/tc_config/tc$index.conf
+        echo "Listen $ip"                        >> /root/tc_config/tc$index.conf
+        echo "BIND $ip"                          >> /root/tc_config/tc$index.conf
+        echo 'Timeout 600'                       >> /root/tc_config/tc$index.conf
+        echo '# Allow ANY'                       >> /root/tc_config/tc$index.conf
+        echo 'BasicAuth hangyin RvHfzHXA7z96hC'  >> /root/tc_config/tc$index.conf
+        /opt/tinyproxy/bin/tinyproxy -c /root/tc_config/tc$index.conf
         echo "INSERT INTO t_proxy(host, port, username, password, enable, remark) VALUES('$ip', 51333, 'hangyin', 'RvHfzHXA7z96hC', 1, '$fip') "
         index=`expr $index + 1`
     done
